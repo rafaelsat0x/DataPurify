@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  # -------------------------------------------------------------
+  # 1. THE VAULT: PostgreSQL Database
+  # -------------------------------------------------------------
+  postgres_db:
+    image: postgres:16-alpine
+    container_name: pg_vault
+    environment:
+      POSTGRES_USER: project_admin
+      POSTGRES_PASSWORD: supersecret123
+      POSTGRES_DB: clean_data_db
+    ports:
+      # This is crucial: It maps the container's DB port to your local machine.
+      # Your native C++ Qt app will connect to localhost:5432.
+      - "5432:5432" 
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+  # -------------------------------------------------------------
+  # 2. THE ENGINE: Python + DuckDB Environment
+  # -------------------------------------------------------------
+  python_etl:
+    image: python:3.12-slim
+    container_name: python_duckdb_engine
+    depends_on:
+      - postgres_db
+    volumes:
+      # Maps a local folder called 'data_pipeline' into the container at /app
+      - ./data_pipeline:/app 
+    working_dir: /app
+    # Keeps the container running in the background so you can execute scripts manually
+    command: tail -f /dev/null 
+    environment:
+      # These variables tell your Python script how to connect to Postgres
+      - DB_HOST=postgres_db
+      - DB_PORT=5432
+      - DB_USER=project_admin
+      - DB_PASSWORD=supersecret123
+      - DB_NAME=clean_data_db
+
+volumes:
+  # Ensures your database doesn't wipe itself every time you stop Docker
+  pg_data:

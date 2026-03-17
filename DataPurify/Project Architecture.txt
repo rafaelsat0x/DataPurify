@@ -1,0 +1,41 @@
+=======================================================================
+                     PROJECT ARCHITECTURE MAP
+=======================================================================
+
+[ RAW DATA ] ---> ( Messy CSVs, JSONs, database dumps, etc. )
+     |
+     v
++---------------------------------------------------------------------+
+| 1. DATA PROCESSING & CLEANING (The Engine)                          |
+|---------------------------------------------------------------------|
+|  Language: Python                                                   |
+|  Engine:   DuckDB                                                   |
+|                                                                     |
+|  Action:   Python executes lightning-fast SQL queries via DuckDB    |
+|            to parse, filter, and normalize the raw data in-memory.  |
++---------------------------------------------------------------------+
+     |
+     | (Clean data is pushed via Python database drivers like psycopg2)
+     v
++---------------------------------------------------------------------+
+| 2. STORAGE LAYER (The Vault)                                        |
+|---------------------------------------------------------------------|
+|  Database: PostgreSQL                                               |
+|  Hosting:  Docker (Dev Environment) -> Native/Bare Metal (Prod)     |
+|                                                                     |
+|  Action:   Acts as the central, rigid source of truth. Stores the   |
+|            structured data safely and handles concurrent access.    |
++---------------------------------------------------------------------+
+     ^
+     | (Native SQL Queries via TCP/IP on localhost:5432 using QtSql)
+     v
++---------------------------------------------------------------------+
+| 3. NATIVE FRONTEND GUI (The Glass)                                  |
+|---------------------------------------------------------------------|
+|  Language: C++                                                      |
+|  Toolkit:  Qt                                                       |
+|                                                                     |
+|  Action:   A blazingly fast, resource-efficient native desktop app. |
+|            Users interact with this GUI to query, view, and manage  |
+|            the clean data without browser overhead.                 |
++---------------------------------------------------------------------+
